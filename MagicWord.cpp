@@ -11,6 +11,7 @@
 HINSTANCE hInst;                                // current instance
 TCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 TCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
+
 ImageResource* nedryBody;
 ImageResource* nedryFace;
 ImageResource* nedryArm;
@@ -24,9 +25,9 @@ void ResizeClient(HWND, int, int);
 void Draw(HDC, int, int);
 
 int APIENTRY _tWinMain(HINSTANCE hInstance,
-                     HINSTANCE hPrevInstance,
-                     LPTSTR    lpCmdLine,
-                     int       nCmdShow)
+                       HINSTANCE hPrevInstance,
+                       LPTSTR    lpCmdLine,
+                       int       nCmdShow)
 {
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
@@ -221,11 +222,11 @@ void ResizeClient(HWND hWnd, int width, int height)
     ptDiff.y = height - rectClient.bottom;
 
     MoveWindow(hWnd,
-                rectWindow.left,
-                rectWindow.top,
-                (rectWindow.right - rectWindow.left) + ptDiff.x,
-                (rectWindow.bottom - rectWindow.top) + ptDiff.y,
-                TRUE);
+               rectWindow.left,
+               rectWindow.top,
+               (rectWindow.right - rectWindow.left) + ptDiff.x,
+               (rectWindow.bottom - rectWindow.top) + ptDiff.y,
+               TRUE);
 }
 
 // Draw Dennis Nedry's winsome mug
