@@ -231,9 +231,15 @@ void ResizeClient(HWND hWnd, int width, int height)
 // Draw Dennis Nedry's winsome mug
 void Draw(HDC hdc, int width, int height)
 {
+	FILETIME ft;
+	GetSystemTimeAsFileTime(&ft);
+
+	ULONGLONG ftime = ( ( (ULONGLONG) ft.dwHighDateTime) << 32 ) + ft.dwLowDateTime;
+	static ULONGLONG ftimeInit = ftime;
+	ULONGLONG ftimeDelta = ftime - ftimeInit;
+
 	Gdiplus::Matrix affineTransform;
 	Gdiplus::Status result;
-	FILETIME ft;
 
 	Gdiplus::Graphics graphics(hdc);
 	graphics.Clear(Gdiplus::Color(0xff, 0xff, 0xff, 0xff));
@@ -244,9 +250,7 @@ void Draw(HDC hdc, int width, int height)
 	Gdiplus::Point ptNedryFace(width / 2 - 54, height / 2 - 180);
 	graphics.DrawImage(nedryFace->lpImage, ptNedryFace);
 
-	GetSystemTimeAsFileTime(&ft);
-	double angle = 15 * cos( ( (double) ft.dwLowDateTime ) / 1000000 );
-
+	double angle = 15 * cos( (double) ( ( ftimeDelta >> 14 ) % 360 ) * M_PI / 180 );
 	Gdiplus::PointF ptNedryArm(width / 2 + 50, height / 2 - 100);
 	Gdiplus::PointF ptNedryArmAxisOffset(13, 108);
 	affineTransform.RotateAt((int) angle, ptNedryArm + ptNedryArmAxisOffset);
