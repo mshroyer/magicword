@@ -1,2 +1,5 @@
-*.suo
-*.vcxproj.user
+MagicWord.suo
+MagicWord.vcxproj.user
+MagicWord.aps
+MagicWord.opensdf
+MagicWord.sdf
