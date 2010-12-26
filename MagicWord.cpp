@@ -23,6 +23,8 @@ LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 void ResizeClient(HWND, int, int);
 void Draw(HDC, int, int);
+void LoadResources();
+void FreeResources();
 
 int APIENTRY _tWinMain(HINSTANCE hInstance,
                        HINSTANCE hPrevInstance,
@@ -135,14 +137,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
 
     case WM_CREATE:
-        nedryBody = new ImageResource(MAKEINTRESOURCE(IDR_NEDRY_BODY));
-        nedryFace = new ImageResource(MAKEINTRESOURCE(IDR_NEDRY_FACE));
-        nedryArm  = new ImageResource(MAKEINTRESOURCE(IDR_NEDRY_ARM));
-
+        LoadResources();
         SetTimer(hWnd, TIMER_ARM, 33, NULL);
-
         PlaySound(MAKEINTRESOURCE(IDR_MAGICWRD), hInst, SND_RESOURCE | SND_ASYNC | SND_LOOP);
-
         break;
 
     case WM_SIZE:
@@ -179,9 +176,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     case WM_DESTROY:
         KillTimer(hWnd, TIMER_ARM);
-        delete nedryBody;
-        delete nedryFace;
-        delete nedryArm;
+        FreeResources();
         PostQuitMessage(0);
         break;
 
@@ -209,6 +204,20 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     }
     return (INT_PTR)FALSE;
+}
+
+void LoadResources()
+{
+    nedryBody = new ImageResource(MAKEINTRESOURCE(IDR_NEDRY_BODY));
+    nedryFace = new ImageResource(MAKEINTRESOURCE(IDR_NEDRY_FACE));
+    nedryArm  = new ImageResource(MAKEINTRESOURCE(IDR_NEDRY_ARM));
+}
+
+void FreeResources()
+{
+    delete nedryBody;
+    delete nedryFace;
+    delete nedryArm;
 }
 
 // Resize the window to result in a client area of exactly the specified dimensions
@@ -239,21 +248,23 @@ void Draw(HDC hdc, int width, int height)
     static ULONGLONG ftimeInit = ftime;
     ULONGLONG ftimeDelta = ftime - ftimeInit;
 
-    Gdiplus::Matrix affineTransform;
-    Gdiplus::Status result;
-
+    // Draw background
     Gdiplus::Graphics graphics(hdc);
     graphics.Clear(Gdiplus::Color(0xff, 0xff, 0xff, 0xff));
 
+    // Draw Nedry's body
     Gdiplus::Point ptNedryBody(width / 2 - 100, height / 2 - 60);
     graphics.DrawImage(nedryBody->lpImage, ptNedryBody);
 
+    // Draw Nedry's face
     Gdiplus::Point ptNedryFace(width / 2 - 54, height / 2 - 180);
     graphics.DrawImage(nedryFace->lpImage, ptNedryFace);
 
-    double angle = 15 * cos( (double) ( ( ftimeDelta >> 14 ) % 360 ) * M_PI / 180 );
+    // Draw Nedry's left arm
+    double angle = 15 * cos( (double) ( (int) ( ( ftimeDelta >> 14 ) % 360 ) ) * M_PI / 180 );
     Gdiplus::PointF ptNedryArm(width / 2 + 50, height / 2 - 100);
     Gdiplus::PointF ptNedryArmAxisOffset(13, 108);
+    Gdiplus::Matrix affineTransform;
     affineTransform.RotateAt((int) angle, ptNedryArm + ptNedryArmAxisOffset);
     graphics.SetTransform(&affineTransform);
     graphics.DrawImage(nedryArm->lpImage, ptNedryArm);
