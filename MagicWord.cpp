@@ -16,15 +16,19 @@ ImageResource* nedryBody;
 ImageResource* nedryFace;
 ImageResource* nedryArm;
 
+ULONGLONG counterArmInit;
+ULONGLONG counterFaceInit;
+
 // Forward declarations:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 void ResizeClient(HWND, int, int);
-void Draw(HDC, int, int);
+void Animate(HDC, int, int);
 void LoadResources();
 void FreeResources();
+ULONGLONG GetCounter();
 
 int APIENTRY _tWinMain(HINSTANCE hInstance,
                        HINSTANCE hPrevInstance,
@@ -138,8 +142,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     case WM_CREATE:
         LoadResources();
+
+        // Begin animation
+        counterArmInit = GetCounter();
+        counterFaceInit = 0;
         SetTimer(hWnd, TIMER_ARM, 33, NULL);
-        PlaySound(MAKEINTRESOURCE(IDR_MAGICWRD), hInst, SND_RESOURCE | SND_ASYNC | SND_LOOP);
         break;
 
     case WM_SIZE:
@@ -164,7 +171,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         hbmpBuffer = CreateCompatibleBitmap(hdc, cxClient, cyClient);
         hbmpOld = (HBITMAP) SelectObject(hdcBuffer, hbmpBuffer);
 
-        Draw(hdcBuffer, cxClient, cyClient);
+        Animate(hdcBuffer, cxClient, cyClient);
         BitBlt(hdc, 0, 0, cxClient, cyClient, hdcBuffer, 0, 0, SRCCOPY);
 
         SelectObject(hdcBuffer, hbmpOld);
@@ -220,6 +227,15 @@ void FreeResources()
     delete nedryArm;
 }
 
+// Returns the current value of the animation counter.  We're just using the
+// Windows 64-bit file time counter, with a 100 nanosecond interval.
+ULONGLONG GetCounter()
+{
+    FILETIME ft;
+    GetSystemTimeAsFileTime(&ft);
+    return ( ( (ULONGLONG) ft.dwHighDateTime ) << 32 ) + ft.dwLowDateTime;
+}
+
 // Resize the window to result in a client area of exactly the specified dimensions
 void ResizeClient(HWND hWnd, int width, int height)
 {
@@ -239,14 +255,17 @@ void ResizeClient(HWND hWnd, int width, int height)
 }
 
 // Draw Dennis Nedry's winsome mug
-void Draw(HDC hdc, int width, int height)
+void Animate(HDC hdc, int width, int height)
 {
-    FILETIME ft;
-    GetSystemTimeAsFileTime(&ft);
+    ULONGLONG counter = GetCounter();
+    ULONGLONG counterArmDelta = counter - counterArmInit;
+    ULONGLONG counterFaceDelta = counter - counterFaceInit;
 
-    ULONGLONG ftime = ( ( (ULONGLONG) ft.dwHighDateTime) << 32 ) + ft.dwLowDateTime;
-    static ULONGLONG ftimeInit = ftime;
-    ULONGLONG ftimeDelta = ftime - ftimeInit;
+    if ( counterFaceDelta > 5 * 10000000 ) {
+        counterFaceInit = counter;
+        counterFaceDelta = 0;
+        PlaySound(MAKEINTRESOURCE(IDR_MAGICWRD), hInst, SND_RESOURCE | SND_ASYNC);
+    }
 
     // Draw background
     Gdiplus::Graphics graphics(hdc);
@@ -261,7 +280,7 @@ void Draw(HDC hdc, int width, int height)
     graphics.DrawImage(nedryFace->lpImage, ptNedryFace);
 
     // Draw Nedry's left arm
-    double angle = 15 * cos( (double) ( (int) ( ( ftimeDelta >> 14 ) % 360 ) ) * M_PI / 180 );
+    double angle = 15 * cos( (double) ( (int) ( ( counterArmDelta >> 14 ) % 360 ) ) * M_PI / 180 );
     Gdiplus::PointF ptNedryArm(width / 2 + 50, height / 2 - 100);
     Gdiplus::PointF ptNedryArmAxisOffset(13, 108);
     Gdiplus::Matrix affineTransform;
