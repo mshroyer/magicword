@@ -230,7 +230,6 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
 LRESULT CALLBACK HyperlinkWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    TCHAR szLink[100];
     HBRUSH hBrush;
     HDC hdc;
     PAINTSTRUCT ps;
@@ -239,11 +238,16 @@ LRESULT CALLBACK HyperlinkWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM
     COLORREF clrActive = RGB(0xc8, 0x00, 0x00);
     LOGFONT lfn;
     HFONT hPrevFont;
+    static TCHAR szLink[100];
     static HFONT hFont;
     static bool active = false;
 
     switch ( message )
     {
+    case WM_CREATE:
+        GetWindowText(hwnd, szLink, sizeof(szLink) / sizeof(TCHAR));
+        return 0;
+
     case WM_SETFONT:
         GetObject((HFONT) wParam, sizeof(lfn), &lfn);
         lfn.lfUnderline = TRUE;
@@ -252,14 +256,13 @@ LRESULT CALLBACK HyperlinkWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM
 
     case WM_PAINT:
         GetClientRect(hwnd, &rect);
-        GetWindowText(hwnd, szLink, sizeof(szLink) / sizeof(TCHAR));
 
         hdc = BeginPaint(hwnd, &ps);
 
         hPrevFont = (HFONT) SelectObject(hdc, hFont);
         SetBkColor(hdc, GetSysColor(COLOR_3DFACE));
         SetTextColor(hdc, active ? clrActive : clrLink);
-        DrawText(hdc, _T("https://github.com/markshroyer/magicword/"), -1, &rect, DT_SINGLELINE | DT_VCENTER);
+        DrawText(hdc, szLink, -1, &rect, DT_SINGLELINE | DT_VCENTER);
         SelectObject(hdc, hPrevFont);
 
         EndPaint(hwnd, &ps);
@@ -272,7 +275,7 @@ LRESULT CALLBACK HyperlinkWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM
         return 0;
 
     case WM_LBUTTONUP:
-        ShellExecute(NULL, _T("open"), _T("https://github.com/markshroyer/magicword/"), NULL, NULL, SW_SHOWNORMAL);
+        ShellExecute(NULL, _T("open"), szLink, NULL, NULL, SW_SHOWNORMAL);
         active = false;
         InvalidateRgn(hwnd, NULL, FALSE);
         UpdateWindow(hwnd);
