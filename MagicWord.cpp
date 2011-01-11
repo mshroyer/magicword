@@ -235,8 +235,9 @@ LRESULT CALLBACK HyperlinkWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM
     HDC hdc;
     PAINTSTRUCT ps;
     RECT rect;
-    COLORREF clrLink = RGB(0x00, 0x00, 0xff);
-    COLORREF clrActive = RGB(0xff, 0x00, 0x00);
+    COLORREF clrLink = RGB(0x00, 0x66, 0xcc);
+    COLORREF clrActive = RGB(0xc8, 0x00, 0x00);
+    LOGFONT lfn;
     HFONT hPrevFont;
     static HFONT hFont;
     static bool active = false;
@@ -244,7 +245,9 @@ LRESULT CALLBACK HyperlinkWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM
     switch ( message )
     {
     case WM_SETFONT:
-        hFont = (HFONT) wParam;
+        GetObject((HFONT) wParam, sizeof(lfn), &lfn);
+        lfn.lfUnderline = TRUE;
+        hFont = CreateFontIndirect(&lfn);
         return 0;
 
     case WM_PAINT:
@@ -273,6 +276,10 @@ LRESULT CALLBACK HyperlinkWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM
         active = false;
         InvalidateRgn(hwnd, NULL, FALSE);
         UpdateWindow(hwnd);
+        return 0;
+
+    case WM_DESTROY:
+        DeleteObject(hFont);
         return 0;
     }
 
