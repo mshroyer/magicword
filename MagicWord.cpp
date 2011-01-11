@@ -23,6 +23,7 @@ ULONGLONG counterFaceInit;
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK    HyperlinkWndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 void ResizeClient(HWND, int, int);
 void Animate(HDC, int, int);
@@ -89,6 +90,20 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wcex.lpszMenuName   = MAKEINTRESOURCE(IDC_MAGICWORD);
     wcex.lpszClassName  = szWindowClass;
     wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_MAGICWORD));
+
+    RegisterClassEx(&wcex);
+
+    wcex.style          = CS_HREDRAW | CS_VREDRAW;
+    wcex.lpfnWndProc    = HyperlinkWndProc;
+    wcex.cbClsExtra     = 0;
+    wcex.cbWndExtra     = 0;
+    wcex.hInstance      = hInstance;
+    wcex.hIcon          = NULL;
+    wcex.hCursor        = LoadCursor(NULL, IDC_HAND);
+    wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
+    wcex.lpszMenuName   = NULL;
+    wcex.lpszClassName  = TEXT("Hyperlink");
+    wcex.hIconSm        = NULL;
 
     return RegisterClassEx(&wcex);
 }
@@ -211,6 +226,36 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     }
     return (INT_PTR)FALSE;
+}
+
+LRESULT CALLBACK HyperlinkWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    TCHAR szText[100];
+    HBRUSH hBrush;
+    HDC hdc;
+    PAINTSTRUCT ps;
+    RECT rect;
+
+    switch ( message )
+    {
+    case WM_PAINT:
+        GetClientRect(hwnd, &rect);
+        GetWindowText(hwnd, szText, sizeof(szText) / sizeof(TCHAR));
+
+        hdc = BeginPaint(hwnd, &ps);
+
+        hBrush = CreateSolidBrush(GetSysColor(COLOR_WINDOW));
+        hBrush = (HBRUSH) SelectObject(hdc, hBrush);
+        SetBkColor(hdc, GetSysColor(COLOR_WINDOW));
+        SetTextColor(hdc, GetSysColor(COLOR_WINDOWTEXT));
+        DrawText(hdc, szText, -1, &rect, DT_SINGLELINE | DT_VCENTER);
+
+        DeleteObject(SelectObject(hdc, hBrush));
+        EndPaint(hwnd, &ps);
+        return 0;
+    }
+
+    return DefWindowProc(hwnd, message, wParam, lParam);
 }
 
 void LoadResources()
