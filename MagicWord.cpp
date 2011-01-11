@@ -100,7 +100,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wcex.hInstance      = hInstance;
     wcex.hIcon          = NULL;
     wcex.hCursor        = LoadCursor(NULL, IDC_HAND);
-    wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
+    wcex.hbrBackground  = (HBRUSH) GetSysColorBrush(COLOR_3DFACE);
     wcex.lpszMenuName   = NULL;
     wcex.lpszClassName  = TEXT("Hyperlink");
     wcex.hIconSm        = NULL;
@@ -230,28 +230,49 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
 LRESULT CALLBACK HyperlinkWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    TCHAR szText[100];
+    TCHAR szLink[100];
     HBRUSH hBrush;
     HDC hdc;
     PAINTSTRUCT ps;
     RECT rect;
+    COLORREF clrLink = RGB(0x00, 0x00, 0xff);
+    COLORREF clrActive = RGB(0xff, 0x00, 0x00);
+    HFONT hPrevFont;
+    static HFONT hFont;
+    static bool active = false;
 
     switch ( message )
     {
+    case WM_SETFONT:
+        hFont = (HFONT) wParam;
+        return 0;
+
     case WM_PAINT:
         GetClientRect(hwnd, &rect);
-        GetWindowText(hwnd, szText, sizeof(szText) / sizeof(TCHAR));
+        GetWindowText(hwnd, szLink, sizeof(szLink) / sizeof(TCHAR));
 
         hdc = BeginPaint(hwnd, &ps);
 
-        hBrush = CreateSolidBrush(GetSysColor(COLOR_WINDOW));
-        hBrush = (HBRUSH) SelectObject(hdc, hBrush);
-        SetBkColor(hdc, GetSysColor(COLOR_WINDOW));
-        SetTextColor(hdc, GetSysColor(COLOR_WINDOWTEXT));
-        DrawText(hdc, szText, -1, &rect, DT_SINGLELINE | DT_VCENTER);
+        hPrevFont = (HFONT) SelectObject(hdc, hFont);
+        SetBkColor(hdc, GetSysColor(COLOR_3DFACE));
+        SetTextColor(hdc, active ? clrActive : clrLink);
+        DrawText(hdc, _T("https://github.com/markshroyer/magicword/"), -1, &rect, DT_SINGLELINE | DT_VCENTER);
+        SelectObject(hdc, hPrevFont);
 
-        DeleteObject(SelectObject(hdc, hBrush));
         EndPaint(hwnd, &ps);
+        return 0;
+
+    case WM_LBUTTONDOWN:
+        active = true;
+        InvalidateRgn(hwnd, NULL, FALSE);
+        UpdateWindow(hwnd);
+        return 0;
+
+    case WM_LBUTTONUP:
+        ShellExecute(NULL, _T("open"), _T("https://github.com/markshroyer/magicword/"), NULL, NULL, SW_SHOWNORMAL);
+        active = false;
+        InvalidateRgn(hwnd, NULL, FALSE);
+        UpdateWindow(hwnd);
         return 0;
     }
 

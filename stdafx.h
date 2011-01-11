@@ -15,6 +15,7 @@
 #include <mmsystem.h>
 #include <ObjIdl.h>
 #include <GdiPlus.h>
+#include <ShellAPI.h>
 
 // C RunTime Header Files
 #include <stdlib.h>
