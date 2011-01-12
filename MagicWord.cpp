@@ -20,11 +20,10 @@ ULONGLONG counterArmInit;
 ULONGLONG counterFaceInit;
 
 // Forward declarations:
-ATOM                MyRegisterClass(HINSTANCE hInstance);
-BOOL                InitInstance(HINSTANCE, int);
-LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
-LRESULT CALLBACK    HyperlinkWndProc(HWND, UINT, WPARAM, LPARAM);
-INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
+BOOL InitInstance(HINSTANCE, int);
+LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK HyperlinkWndProc(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK About(HWND, UINT, WPARAM, LPARAM);
 void ResizeClient(HWND, int, int);
 void Animate(HDC, int, int);
 void LoadResources();
@@ -43,6 +42,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     HACCEL hAccelTable;
     Gdiplus::GdiplusStartupInput gdiplusStartupInput;
     ULONG_PTR gdiplusToken;
+    WNDCLASSEX wcex;
 
     // We're using GDI+ to make things easier (and for higher quality)...
     Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
@@ -51,7 +51,34 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     LoadString(hInstance, IDC_MAGICWORD, szWindowClass, MAX_LOADSTRING);
 
-    MyRegisterClass(hInstance);
+    // Register application window class
+    wcex.cbSize         = sizeof(WNDCLASSEX);
+    wcex.style          = CS_HREDRAW | CS_VREDRAW;
+    wcex.lpfnWndProc    = WndProc;
+    wcex.cbClsExtra     = 0;
+    wcex.cbWndExtra     = 0;
+    wcex.hInstance      = hInstance;
+    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_MAGICWORD));
+    wcex.hCursor        = LoadCursor(NULL, IDC_ARROW);
+    wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
+    wcex.lpszMenuName   = MAKEINTRESOURCE(IDC_MAGICWORD);
+    wcex.lpszClassName  = szWindowClass;
+    wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_MAGICWORD));
+    RegisterClassEx(&wcex);
+
+    // Register Hyperlink child window class
+    wcex.style          = CS_HREDRAW | CS_VREDRAW;
+    wcex.lpfnWndProc    = HyperlinkWndProc;
+    wcex.cbClsExtra     = 0;
+    wcex.cbWndExtra     = 0;
+    wcex.hInstance      = hInstance;
+    wcex.hIcon          = NULL;
+    wcex.hCursor        = LoadCursor(NULL, IDC_HAND);
+    wcex.hbrBackground  = (HBRUSH) GetSysColorBrush(COLOR_3DFACE);
+    wcex.lpszMenuName   = NULL;
+    wcex.lpszClassName  = TEXT("Hyperlink");
+    wcex.hIconSm        = NULL;
+    RegisterClassEx(&wcex);
 
     // Perform application initialization:
     if (!InitInstance (hInstance, nCmdShow))
@@ -71,41 +98,6 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 
     Gdiplus::GdiplusShutdown(gdiplusToken);
     return (int) msg.wParam;
-}
-
-
-ATOM MyRegisterClass(HINSTANCE hInstance)
-{
-    WNDCLASSEX wcex;
-
-    wcex.cbSize         = sizeof(WNDCLASSEX);
-    wcex.style          = CS_HREDRAW | CS_VREDRAW;
-    wcex.lpfnWndProc    = WndProc;
-    wcex.cbClsExtra     = 0;
-    wcex.cbWndExtra     = 0;
-    wcex.hInstance      = hInstance;
-    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_MAGICWORD));
-    wcex.hCursor        = LoadCursor(NULL, IDC_ARROW);
-    wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
-    wcex.lpszMenuName   = MAKEINTRESOURCE(IDC_MAGICWORD);
-    wcex.lpszClassName  = szWindowClass;
-    wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_MAGICWORD));
-
-    RegisterClassEx(&wcex);
-
-    wcex.style          = CS_HREDRAW | CS_VREDRAW;
-    wcex.lpfnWndProc    = HyperlinkWndProc;
-    wcex.cbClsExtra     = 0;
-    wcex.cbWndExtra     = 0;
-    wcex.hInstance      = hInstance;
-    wcex.hIcon          = NULL;
-    wcex.hCursor        = LoadCursor(NULL, IDC_HAND);
-    wcex.hbrBackground  = (HBRUSH) GetSysColorBrush(COLOR_3DFACE);
-    wcex.lpszMenuName   = NULL;
-    wcex.lpszClassName  = TEXT("Hyperlink");
-    wcex.hIconSm        = NULL;
-
-    return RegisterClassEx(&wcex);
 }
 
 
@@ -208,6 +200,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
+
 // Message handler for about box.
 INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -227,6 +220,7 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     }
     return (INT_PTR)FALSE;
 }
+
 
 LRESULT CALLBACK HyperlinkWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -295,6 +289,7 @@ LRESULT CALLBACK HyperlinkWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM
     return DefWindowProc(hwnd, message, wParam, lParam);
 }
 
+
 void LoadResources()
 {
     nedryBody = new ImageResource(MAKEINTRESOURCE(IDR_NEDRY_BODY));
@@ -302,12 +297,14 @@ void LoadResources()
     nedryArm  = new ImageResource(MAKEINTRESOURCE(IDR_NEDRY_ARM));
 }
 
+
 void FreeResources()
 {
     delete nedryBody;
     delete nedryFace;
     delete nedryArm;
 }
+
 
 // Returns the current value of the animation counter.  We're just using the
 // Windows 64-bit file time counter, with a 100 nanosecond interval.
@@ -317,6 +314,7 @@ ULONGLONG GetCounter()
     GetSystemTimeAsFileTime(&ft);
     return ( ( (ULONGLONG) ft.dwHighDateTime ) << 32 ) + ft.dwLowDateTime;
 }
+
 
 // Resize the window to result in a client area of exactly the specified dimensions
 void ResizeClient(HWND hWnd, int width, int height)
