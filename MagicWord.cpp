@@ -238,6 +238,7 @@ LRESULT CALLBACK HyperlinkWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM
     COLORREF clrActive = RGB(0xc8, 0x00, 0x00);
     LOGFONT lfn;
     HFONT hPrevFont;
+    TRACKMOUSEEVENT tme;
     static TCHAR szLink[100];
     static HFONT hFont;
     static bool active = false;
@@ -269,6 +270,10 @@ LRESULT CALLBACK HyperlinkWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM
         return 0;
 
     case WM_LBUTTONDOWN:
+        tme.cbSize = sizeof(tme);
+        tme.dwFlags = TME_LEAVE;
+        tme.hwndTrack = hwnd;
+        TrackMouseEvent(&tme);
         active = true;
         InvalidateRgn(hwnd, NULL, FALSE);
         UpdateWindow(hwnd);
@@ -276,6 +281,7 @@ LRESULT CALLBACK HyperlinkWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM
 
     case WM_LBUTTONUP:
         ShellExecute(NULL, _T("open"), szLink, NULL, NULL, SW_SHOWNORMAL);
+    case WM_MOUSELEAVE:
         active = false;
         InvalidateRgn(hwnd, NULL, FALSE);
         UpdateWindow(hwnd);
