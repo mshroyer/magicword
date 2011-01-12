@@ -274,11 +274,14 @@ LRESULT CALLBACK HyperlinkWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM
         return 0;
 
     case WM_LBUTTONUP:
-        ShellExecute(NULL, _T("open"), szLink, NULL, NULL, SW_SHOWNORMAL);
+        if ( active )
+            ShellExecute(NULL, _T("open"), szLink, NULL, NULL, SW_SHOWNORMAL);
     case WM_MOUSELEAVE:
-        active = false;
-        InvalidateRgn(hwnd, NULL, FALSE);
-        UpdateWindow(hwnd);
+        if ( active ) {
+            active = false;
+            InvalidateRgn(hwnd, NULL, FALSE);
+            UpdateWindow(hwnd);
+        }
         return 0;
 
     case WM_DESTROY:
