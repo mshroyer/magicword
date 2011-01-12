@@ -82,6 +82,7 @@
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Hyperlink.h" />
     <ClInclude Include="ImageResource.h" />
     <ClInclude Include="LogString.h" />
     <ClInclude Include="MagicWord.h" />
@@ -90,6 +91,7 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Hyperlink.cpp" />
     <ClCompile Include="ImageResource.cpp" />
     <ClCompile Include="LogString.cpp" />
     <ClCompile Include="MagicWord.cpp" />

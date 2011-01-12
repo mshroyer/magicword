@@ -1,6 +1,5 @@
 #pragma once
 
-#include "stdafx.h"
 #include <stdarg.h>
 
 #define LOGSTRING_MAX_LENGTH 1024
